@@ -208,15 +208,6 @@ export function buildMcpLaunchSpec(input: { mcpPath?: string | null; executableP
   args: string[];
   usedNpxFallback: boolean;
 } {
-  // Check if user wants to use chrome-devtools-mcp (Chrome 146+ native support)
-  if (process.env.OPENCLI_USE_CHROME_DEVTOOLS_MCP === '1') {
-    return {
-      command: 'npx',
-      args: ['-y', 'chrome-devtools-mcp@latest', '--autoConnect'],
-      usedNpxFallback: true,
-    };
-  }
-
   const runtimeArgs = buildRuntimeArgs(input);
   if (input.mcpPath) {
     return {
