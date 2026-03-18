@@ -168,11 +168,8 @@ export function resolveCdpEndpoint(): { endpoint?: string; requestedCdp: boolean
     return { endpoint: envVal, requestedCdp: true };
   }
 
-  // Fallback to auto-discovery if not explicitly set
-  const autoDiscovered = discoverChromeEndpoint();
-  if (autoDiscovered) {
-    return { endpoint: autoDiscovered, requestedCdp: true };
-  }
+  // Removed: auto-discovery fallback to prefer Extension mode by default
+  // Users can still explicitly set OPENCLI_CDP_ENDPOINT to use CDP mode
 
   return { requestedCdp: false };
 }
