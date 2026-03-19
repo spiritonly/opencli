@@ -1,112 +1,160 @@
 # 河北省水文资料在线整汇编系统 OpenCLI 适配器
 
 ## 系统信息
-- 系统名称: 河北省雨水情监测预报业务平台 - 水文资料在线整汇编系统
-- 访问地址: http://10.243.45.152/
-- API基础路径: /prod-api/
 
-## 已发现的API端点
+| 项目 | 内容 |
+|------|------|
+| 系统名称 | 河北省雨水情监测预报业务平台 - 水文资料在线整汇编系统 |
+| 访问地址 | http://10.243.45.152/ |
+| API基础路径 | /prod-api/ |
+| 认证方式 | JWT Token (localStorage: Admin-Token) + ClientID |
 
-### 1. 整编概览相关
-- `GET /business/index/statistic/reorganizeIndexCompletion` - 整编完成率统计
-  - 参数: startDt, endDt, type, stcd
-- `GET /business/index/statistic/actualMeasurement` - 实测数据统计
-  - 参数: stcd, yr
-- `GET /business/index/statistic/reorganizeGraph` - 整编图表数据
-  - 参数: yr
-- `GET /business/index/statistic/zqGraph` - 雨情图表数据
-  - 参数: stcd, yr, data[]
+## 已实现的命令
 
-### 2. 数据整编相关
-- `GET /business/compileData/riverStationData/baZ0g09B/list` - 水位数据列表 (baZ0g09B = 水位Z0G09)
-  - 参数: stcd, yr
+### 1. overview - 整编概览（完成率统计）
 
-### 3. 系统认证相关
-- `GET /system/auth/getInfo` - 获取用户信息
-  - 参数: year, stcd
-- `GET /system/auth/getRouters` - 获取路由菜单
-  - 参数: stcd, yr
-- `GET /system/auth/getPermissionList` - 获取权限列表
-  - 参数: yr, perm, parentId, childId
-- `GET /system/auth/getPermByStcd` - 按测站获取权限
-  - 参数: stcd, yr
-- `GET /system/auth/getIndexGraphStList` - 获取整编概览测站列表
-  - 参数: yr
-- `GET /system/auth/getPermissionInfo` - 获取权限信息
-  - 参数: yr
+获取水文整编完成率统计数据，支持省、市、队三级层级展示。
 
-### 4. 系统日志相关
-- `GET /system/logininfor/statistic` - 登录统计
+**使用示例：**
 
-### 5. 租户相关
-- `GET /auth/tenant/list` - 租户列表
-
-## 单站整编子菜单
-- 整编配置
-- 水位
-  - 整编水位数据
-  - 自记数据
-  - 水准点高程考证表
-  - 水尺零点高程考证表
-- 流量
-- 含沙量
-- 颗粒分析
-- 冰情
-- 降水
-- 蒸发（含辅助项目）
-- 水温
-- 气温(岸温)
-- 地下水
-- 说明资料
-- 考证资料
-- 调查资料
-- 图形
-
-## OpenCLI 命令使用
-
-### 1. 整编概览 - 完成率统计
 ```bash
-opencli hydra overview --start-date 2026-03-18 --end-date 2026-03-18 --type "日清月结"
+# 默认查询前一天（日清月结）
+opencli hydra overview
+
+# 查询指定日期范围
+opencli hydra overview --start 2025-03-01 --end 2025-03-31
+
+# 限制返回数量
+opencli hydra overview --limit 20
+
+# 按层级筛选（1=省级, 2=省市, 3=省市队）
+opencli hydra overview --level 2
+
+# 导出JSON格式
+opencli hydra overview --format json --limit 50
 ```
 
-### 2. 实测数据统计
+**参数说明：**
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `--start` | string | 昨天 | 开始日期 (YYYY-MM-DD) |
+| `--end` | string | 昨天 | 结束日期 (YYYY-MM-DD) |
+| `--type` | string | 日清月结 | 统计方法 |
+| `--stcd` | string | "" | 测站编码 |
+| `--limit` | int | 50 | 返回记录数 |
+| `--level` | int | 3 | 显示层级 (1=省, 2=省市, 3=省市队) |
+| `--debug` | bool | false | 调试模式 |
+
+**输出字段：**
+
+- `unit`: 单位名称
+- `total_stations`: 总站数
+- `water_level_stations`: 水位站数
+- `water_level_completion`: 水位完成率
+- `discharge_stations`: 流量站数
+- `discharge_completion`: 流量完成率
+- `evaporation_stations`: 蒸发站数
+- `evaporation_completion`: 蒸发完成率
+- `sediment_stations`: 输沙率站数
+- `sediment_completion`: 输沙率完成率
+- `sand_concentration_stations`: 含沙量站数
+- `sand_concentration_completion`: 含沙量完成率
+- `precipitation_stations`: 降水站数
+- `precipitation_completion`: 降水完成率
+
+### 2. actual-measurement - 实测数据统计
+
+获取实测流量、输沙率、单沙测次统计。
+
 ```bash
-opencli hydra actual-measurement --stcd 03100001 --year 2026
+opencli hydra actual-measurement --stcd 03100001
 ```
 
-### 3. 水位数据
+### 3. water-level - 水位数据
+
+获取整编水位数据列表。
+
 ```bash
-opencli hydra water-level --stcd 03100001 --year 2026 --limit 100
+opencli hydra water-level --stcd 03100001 --limit 100
 ```
 
-### 4. 测站列表
+### 4. stations - 测站列表
+
+获取所有可用测站列表。
+
 ```bash
-opencli hydra stations --year 2026
+opencli hydra stations
 ```
 
-## 数据类型说明
+## 技术实现说明
 
-### 测站编码 (stcd)
-- 03100001: 邯郸竞赛站1
-- 03150001: 唐山竞赛站1
-- 等等...
+### 认证机制
 
-### 统计方法 (type)
-- 日清月结
-- 按日统计
-- 按旬统计
-- 按月统计
+系统使用双重认证：
+1. **JWT Token**: 从 localStorage 获取 `Admin-Token`
+2. **ClientID**: 从 JWT payload 中解析 `clientid` 字段
 
-## 下一步探索建议
+请求头格式：
+```
+Authorization: Bearer <token>
+clientid: <clientid>
+```
 
-1. **更多数据类型**: 探索流量、含沙量、降水等其他数据类型的API
-   - 可能的端点模式: `/business/compileData/riverStationData/{数据表标识}/list`
-   - 水位用 baZ0g09B，其他类型可能有不同的标识
+### API端点
 
-2. **导出功能**: 系统有"导出excel"和"导出通报表"按钮，需要探索导出API
+| 功能 | 端点 | 参数 |
+|------|------|------|
+| 整编完成率统计 | `/business/index/statistic/reorganizeIndexCompletion` | startDt, endDt, type, stcd |
+| 实测数据统计 | `/business/index/statistic/actualMeasurement` | stcd, yr |
+| 水位数据列表 | `/business/compileData/riverStationData/baZ0g09B/list` | stcd, yr |
+| 测站列表 | `/system/auth/getIndexGraphStList` | yr |
 
-3. **查询和过滤**: 探索如何按日期范围、测站范围等条件进行查询
+### 数据结构
 
-4. **图表数据**: reorganizeGraph 和 zqGraph 返回图表数据，可以用于可视化
+API返回树形结构数据：
+```
+data
+├── id: 5
+├── name: "河北省水文勘测研究中心"
+├── statInfo: {...}
+└── children: [
+    {
+        name: "石家庄水文勘测研究中心",
+        statInfo: {...},
+        children: [
+            { name: "平山水文勘测队", statInfo: {...} },
+            { name: "石南水文勘测队", statInfo: {...} },
+            ...
+        ]
+    },
+    ...
+]
+```
 
-5. **更多菜单**: 综合整编、成果一览、汇编、墒情等模块需要进一步探索
+## 测站编码示例
+
+| 测站编码 | 测站名称 |
+|----------|----------|
+| 03100001 | 邯郸竞赛站1 |
+| 03150001 | 唐山竞赛站1 |
+
+## 统计方法
+
+- `日清月结` - 默认
+- `按日统计`
+- `按旬统计`
+- `按月统计`
+
+## 使用建议
+
+1. **日期选择**：由于采用"日清月结"模式，建议查询前一天的数据以获得完整统计
+2. **层级选择**：根据需求选择展示层级，减少不必要的数据量
+3. **筛选条件**：可结合 `--stcd` 参数查询特定测站的数据
+
+## 待完善功能
+
+- [ ] 导出Excel功能
+- [ ] 更多数据类型（流量、含沙量、降水等）
+- [ ] 图表数据可视化
+- [ ] 综合整编、成果一览等模块
