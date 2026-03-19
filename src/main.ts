@@ -16,6 +16,7 @@ import { browserSession, DEFAULT_BROWSER_COMMAND_TIMEOUT, runWithTimeout } from 
 import { PKG_VERSION } from './version.js';
 import { getCompletions, printCompletionScript } from './completion.js';
 import { CliError } from './errors.js';
+import { loadInternalClis } from './internal-loader.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,6 +24,9 @@ const BUILTIN_CLIS = path.resolve(__dirname, 'clis');
 const USER_CLIS = path.join(os.homedir(), '.opencli', 'clis');
 
 await discoverClis(BUILTIN_CLIS, USER_CLIS);
+
+// 加载内部CLI（从私有包）
+await loadInternalClis();
 
 // ── Fast-path: handle --get-completions before commander parses ─────────
 // Usage: opencli --get-completions --cursor <N> [word1 word2 ...]

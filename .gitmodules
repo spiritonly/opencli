@@ -1,0 +1,3 @@
+[submodule "src/internal"]
+	path = src/internal
+	url = https://github.com/spiritonly/summit-opencli-internal.git
