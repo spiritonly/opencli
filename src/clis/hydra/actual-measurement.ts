@@ -70,9 +70,9 @@ cli({
     return [{
       station: stcd,
       station_name: data.stnm || '',
-      discharge_count: data.actualQCount || 0,
-      sediment_rate_count: data.actualLsCount || 0,
-      sand_sample_count: data.actualCsCount || 0,
+      discharge_count: data.q || 0,
+      sediment_rate_count: data.qs || 0,
+      sand_sample_count: data.s || 0,
     }];
   },
 });
