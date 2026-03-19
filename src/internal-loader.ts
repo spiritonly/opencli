@@ -3,7 +3,6 @@
  * 从Git子模块 src/internal 加载内部CLI命令
  */
 
-import { registerCommand } from './registry.js';
 import { log } from './logger.js';
 
 /**
@@ -18,18 +17,9 @@ export async function loadInternalClis(): Promise<void> {
   }
 
   try {
-    // 从Git子模块加载（相对路径）
-    const internal = await import('./internal/src/index.js');
-
-    if (internal.hydraCommands && Array.isArray(internal.hydraCommands)) {
-      for (const cmd of internal.hydraCommands) {
-        registerCommand(cmd);
-        log.debug(`[internal] 注册命令: ${cmd.site}/${cmd.name}`);
-      }
-    }
-
-    // 可以在这里添加其他内部系统的CLI
-    // if (internal.otherSystemCommands) { ... }
+    // 从Git子模块加载
+    // 子模块的 index.ts 会导入 hydra/index.ts，后者使用 cli() 自动注册命令
+    await import('./internal/src/index.js');
 
     log.info(`[internal] 内部CLI加载完成`);
   } catch (err: any) {
